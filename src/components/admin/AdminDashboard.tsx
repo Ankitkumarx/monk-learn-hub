@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '../auth/AuthProvider';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { Users, BookOpen, Settings, Plus, Edit, Trash2, UserCheck } from 'lucide-react';
 
 interface Student {
@@ -92,18 +93,19 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900">
+      <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <span className="text-lg font-bold text-white">MT</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-800">Admin Portal</h1>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Admin Portal</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
+              <ThemeToggle />
+              <span className="text-sm text-gray-600 dark:text-gray-300">Welcome, {user?.name}</span>
               <Button variant="outline" onClick={logout}>Logout</Button>
             </div>
           </div>
@@ -112,63 +114,63 @@ export const AdminDashboard: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Dashboard Overview</h2>
-          <p className="text-gray-600">Manage students, courses, and platform settings</p>
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Dashboard Overview</h2>
+          <p className="text-gray-600 dark:text-gray-300">Manage students, courses, and platform settings</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-0 bg-white/80 backdrop-blur-sm">
+          <Card className="border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600">Total Students</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Students</CardTitle>
                 <Users className="w-4 h-4 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-800">{stats.totalStudents}</div>
+              <div className="text-2xl font-bold text-gray-800 dark:text-white">{stats.totalStudents}</div>
               <p className="text-xs text-green-600 mt-1">{stats.activeStudents} active</p>
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-white/80 backdrop-blur-sm">
+          <Card className="border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600">Total Courses</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Courses</CardTitle>
                 <BookOpen className="w-4 h-4 text-purple-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-800">{stats.totalCourses}</div>
+              <div className="text-2xl font-bold text-gray-800 dark:text-white">{stats.totalCourses}</div>
               <p className="text-xs text-green-600 mt-1">{stats.activeCourses} published</p>
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-white/80 backdrop-blur-sm">
+          <Card className="border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600">Enrollments</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">Enrollments</CardTitle>
                 <UserCheck className="w-4 h-4 text-green-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-800">
+              <div className="text-2xl font-bold text-gray-800 dark:text-white">
                 {students.reduce((acc, student) => acc + student.enrolledCourses.length, 0)}
               </div>
-              <p className="text-xs text-gray-500 mt-1">Active enrollments</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Active enrollments</p>
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-white/80 backdrop-blur-sm">
+          <Card className="border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600">Platform Health</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">Platform Health</CardTitle>
                 <Settings className="w-4 h-4 text-indigo-600" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">Healthy</div>
-              <p className="text-xs text-gray-500 mt-1">All systems operational</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">All systems operational</p>
             </CardContent>
           </Card>
         </div>
