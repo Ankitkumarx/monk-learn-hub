@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -40,27 +39,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    
-    // Mock authentication - replace with Supabase integration
     try {
-      // Demo users for testing
-      const demoUsers = [
-        { id: '1', email: 'admin@monk.edu', password: 'admin123', name: 'Admin User', role: 'admin' as const },
-        { id: '2', email: 'student@monk.edu', password: 'student123', name: 'John Doe', role: 'student' as const },
-      ];
-      
-      const foundUser = demoUsers.find(u => u.email === email && u.password === password);
-      
-      if (foundUser) {
-        const { password: _, ...userWithoutPassword } = foundUser;
-        setUser(userWithoutPassword);
-        localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+      const res = await fetch('http://localhost:4000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
         setIsLoading(false);
-        return true;
+        return false;
       }
-      
+      const userData = await res.json();
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
       setIsLoading(false);
-      return false;
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       setIsLoading(false);

@@ -1,11 +1,10 @@
-
 import React from 'react';
-import { AuthProvider, useAuth } from '../components/auth/AuthProvider';
+import { useAuth } from '../components/auth/AuthProvider';
 import { LoginForm } from '../components/auth/LoginForm';
 import { StudentDashboard } from '../components/student/StudentDashboard';
 import { AdminDashboard } from '../components/admin/AdminDashboard';
 
-const AppContent: React.FC = () => {
+const Index: React.FC = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -30,14 +29,6 @@ const AppContent: React.FC = () => {
   }
 
   return <StudentDashboard />;
-};
-
-const Index = () => {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
 };
 
 export default Index;

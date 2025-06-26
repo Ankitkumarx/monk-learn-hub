@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,9 @@ export const LoginForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetForm, setResetForm] = useState({ email: '', phone: '', newPassword: '' });
+  const [resetLoading, setResetLoading] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
 
@@ -23,6 +25,16 @@ export const LoginForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (email === 'admin@monk.edu') {
+      toast({
+        title: 'Admin Login Not Allowed',
+        description: 'Please use the admin login page for admin access.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+      return;
+    }
 
     const success = await login(email, password);
     
@@ -79,6 +91,14 @@ export const LoginForm: React.FC = () => {
                 required
                 className="h-11"
               />
+              <button
+                type="button"
+                className="text-xs text-blue-600 hover:underline mt-1"
+                onClick={() => setShowForgotPassword(true)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+              >
+                Forgot Password?
+              </button>
             </div>
             <Button 
               type="submit" 
@@ -98,14 +118,76 @@ export const LoginForm: React.FC = () => {
               Don't have an account? Create one
             </Button>
           </div>
-          
-          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Demo Accounts:</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Admin: admin@monk.edu / admin123</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Student: student@monk.edu / student123</p>
-          </div>
         </CardContent>
       </Card>
+      {showForgotPassword && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-bold mb-2 text-gray-800 dark:text-white">Reset Password</h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setResetLoading(true);
+                const res = await fetch('http://localhost:4000/api/reset-password', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(resetForm),
+                });
+                if (res.ok) {
+                  toast({ title: 'Password Reset', description: 'Your password has been reset. Please login.' });
+                  setShowForgotPassword(false);
+                  setResetForm({ email: '', phone: '', newPassword: '' });
+                } else {
+                  const data = await res.json();
+                  toast({ title: 'Reset Failed', description: data.error || 'Could not reset password.', variant: 'destructive' });
+                }
+                setResetLoading(false);
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <Label htmlFor="reset-email">Email</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  value={resetForm.email}
+                  onChange={e => setResetForm(f => ({ ...f, email: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="reset-phone">Phone Number</Label>
+                <Input
+                  id="reset-phone"
+                  type="tel"
+                  value={resetForm.phone}
+                  onChange={e => setResetForm(f => ({ ...f, phone: e.target.value }))}
+                  required
+                  pattern="\d{10}"
+                  maxLength={10}
+                />
+              </div>
+              <div>
+                <Label htmlFor="reset-password">New Password</Label>
+                <Input
+                  id="reset-password"
+                  type="password"
+                  value={resetForm.newPassword}
+                  onChange={e => setResetForm(f => ({ ...f, newPassword: e.target.value }))}
+                  required
+                  minLength={6}
+                />
+              </div>
+              <Button className="w-full" type="submit" disabled={resetLoading}>
+                {resetLoading ? 'Resetting...' : 'Reset Password'}
+              </Button>
+              <Button className="w-full mt-2" variant="outline" type="button" onClick={() => setShowForgotPassword(false)}>
+                Cancel
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

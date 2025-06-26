@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
 interface RegisterFormProps {
@@ -15,11 +13,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onBackToLogin }) => 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
-    confirmPassword: '',
-    role: 'student' as 'student' | 'admin'
+    confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,16 +45,42 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onBackToLogin }) => 
       return;
     }
 
-    // Mock registration - replace with actual API call
+    if (!/^\d{10}$/.test(formData.phone)) {
+      toast({
+        title: 'Invalid Phone Number',
+        description: 'Please enter a valid 10-digit phone number.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Register via backend API
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const res = await fetch('http://localhost:4000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+        }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        toast({
+          title: 'Registration Failed',
+          description: errorData.error || 'An error occurred during registration',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
       toast({
         title: 'Registration Successful',
         description: 'Your account has been created. Please login.',
       });
-      
       onBackToLogin();
     } catch (error) {
       toast({
@@ -64,7 +89,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onBackToLogin }) => 
         variant: 'destructive',
       });
     }
-    
     setIsLoading(false);
   };
 
@@ -111,16 +135,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onBackToLogin }) => 
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={formData.role} onValueChange={(value: 'student' | 'admin') => handleInputChange('role', value)}>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="admin">Administrator</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="Enter your phone number"
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                required
+                className="h-11"
+                pattern="\d{10}"
+                maxLength={10}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -133,6 +159,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onBackToLogin }) => 
                 required
                 className="h-11"
               />
+              <button
+                type="button"
+                className="text-xs text-blue-600 hover:underline mt-1"
+                onClick={() => setShowForgotPassword(true)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+              >
+                Forgot Password?
+              </button>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -165,6 +199,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onBackToLogin }) => 
           </div>
         </CardContent>
       </Card>
+      {showForgotPassword && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-bold mb-2 text-gray-800 dark:text-white">Reset Password</h2>
+            <p className="mb-4 text-gray-600 dark:text-gray-300">Please contact the administrator to reset your password.</p>
+            <Button className="w-full" onClick={() => setShowForgotPassword(false)}>Close</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

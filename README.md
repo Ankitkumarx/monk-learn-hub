@@ -1,4 +1,8 @@
-# Welcome to your Lovable project
+# Lovable Project
+
+Company: Monk Technologies.
+
+Welcome to your Lovable project
 
 ## Project info
 
