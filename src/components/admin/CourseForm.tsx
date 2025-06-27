@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -134,6 +135,22 @@ export const CourseForm: React.FC<CourseFormProps> = ({ course, onSave, onCancel
         });
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddVideo = (moduleIndex: number) => {
+    if (newVideo.title && newVideo.videoUrl) {
+      const video: VideoItem = {
+        id: `video_${Date.now()}`,
+        title: newVideo.title,
+        description: newVideo.description,
+        videoUrl: newVideo.videoUrl,
+        thumbnailUrl: newVideo.thumbnailUrl,
+      };
+      const updatedModules = [...formData.modules];
+      updatedModules[moduleIndex].videos.push(video);
+      setFormData({ ...formData, modules: updatedModules });
+      setNewVideo({ title: '', description: '', videoUrl: '', thumbnailUrl: '' });
     }
   };
 
