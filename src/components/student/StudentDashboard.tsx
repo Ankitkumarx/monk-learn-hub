@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '../ui/use-toast';
+import { API_BASE_URL } from '../../lib/api';
 
 interface Chapter {
   id: string;
@@ -48,7 +49,7 @@ export const StudentDashboard: React.FC = () => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['courses'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:4000/api/courses');
+      const res = await fetch(`${API_BASE_URL}/courses`);
       if (!res.ok) throw new Error('Failed to fetch courses');
       return res.json();
     },
@@ -73,7 +74,7 @@ export const StudentDashboard: React.FC = () => {
     queryKey: ['enrollments', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const res = await fetch(`http://localhost:4000/api/enrollments/${user.id}`);
+      const res = await fetch(`${API_BASE_URL}/enrollments/${user.id}`);
       if (!res.ok) throw new Error('Failed to fetch enrollments');
       return res.json();
     },
@@ -90,7 +91,7 @@ export const StudentDashboard: React.FC = () => {
       // Fetch progress for each enrolled course
       for (const courseId of userEnrollments) {
         try {
-          const res = await fetch(`http://localhost:4000/api/progress/${user.id}/${courseId}`);
+          const res = await fetch(`${API_BASE_URL}/progress/${user.id}/${courseId}`);
           if (res.ok) {
             const data = await res.json();
             progressData[courseId] = data.watched || [];
@@ -107,7 +108,7 @@ export const StudentDashboard: React.FC = () => {
 
   const requestAccessMutation = useMutation({
     mutationFn: async (courseId: string) => {
-      const res = await fetch('http://localhost:4000/api/requests', {
+      const res = await fetch(`${API_BASE_URL}/requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId: user?.id, courseId }),
@@ -125,7 +126,7 @@ export const StudentDashboard: React.FC = () => {
   const { data: requests = [] } = useQuery<{ studentId: string; courseId: string }[]>({
     queryKey: ['requests'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:4000/api/requests');
+      const res = await fetch(`${API_BASE_URL}/requests`);
       if (!res.ok) throw new Error('Failed to fetch requests');
       return res.json();
     },
@@ -189,7 +190,7 @@ export const StudentDashboard: React.FC = () => {
               />
               <ThemeToggle />
               <span className="text-sm text-gray-600 dark:text-gray-300">Welcome, {user?.name}</span>
-              <Button variant="outline" onClick={logout}>Logout</Button>
+              <Button variant="outline" onClick={() => { logout(); navigate('/'); }}>Logout</Button>
             </div>
           </div>
         </div>

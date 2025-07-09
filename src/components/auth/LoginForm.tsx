@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { RegisterForm } from './RegisterForm';
+import { API_BASE_URL } from '../../lib/api';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -128,7 +129,7 @@ export const LoginForm: React.FC = () => {
               onSubmit={async (e) => {
                 e.preventDefault();
                 setResetLoading(true);
-                const res = await fetch('http://localhost:4000/api/reset-password', {
+                const res = await fetch(`${API_BASE_URL}/reset-password`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(resetForm),

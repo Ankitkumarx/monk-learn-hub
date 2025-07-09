@@ -10,6 +10,9 @@ import { useAuth } from '../auth/AuthProvider';
 import { useToast } from '../ui/use-toast';
 import ReactPlayer from 'react-player/youtube';
 import { Tooltip } from '@/components/ui/tooltip';
+import { API_BASE_URL } from '../../lib/api';
+import { Document, Page, pdfjs } from 'react-pdf';
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface VideoItem {
   id: string;
@@ -67,7 +70,7 @@ export const CoursePage: React.FC = () => {
   const { data: course, isLoading, isError } = useQuery<Course>({
     queryKey: ['course', courseId],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:4000/api/courses/${courseId}`);
+      const res = await fetch(`${API_BASE_URL}/courses/${courseId}`);
       if (!res.ok) throw new Error('Failed to fetch course');
       return res.json();
     },
@@ -77,7 +80,7 @@ export const CoursePage: React.FC = () => {
   const { data: progress } = useQuery<{ watched: string[] }>({
     queryKey: ['progress', user?.id, courseId],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:4000/api/progress/${user?.id}/${courseId}`);
+      const res = await fetch(`${API_BASE_URL}/progress/${user?.id}/${courseId}`);
       if (!res.ok) throw new Error('Failed to fetch progress');
       return res.json();
     },
@@ -147,7 +150,7 @@ export const CoursePage: React.FC = () => {
   const handleVideoComplete = async (videoId: string) => {
     if (!user?.id || !courseId) return;
     try {
-      await fetch(`http://localhost:4000/api/progress/${user.id}/${courseId}/${videoId}`, { method: 'POST' });
+      await fetch(`${API_BASE_URL}/progress/${user.id}/${courseId}/${videoId}`, { method: 'POST' });
       setWatchedVideos(prev => [...prev, videoId]);
       // Auto-advance logic
       if (nextVideo && nextModuleIndex !== null) {
@@ -395,11 +398,11 @@ export const CoursePage: React.FC = () => {
                 ) : selectedMaterial ? (
                   <div className="flex flex-col items-center justify-center h-full text-center p-8">
                     <h2 className="text-xl font-bold mb-2">{selectedMaterial.name}</h2>
-                    <iframe
-                      src={selectedMaterial.dataUrl}
-                      title={selectedMaterial.name}
-                      className="w-full max-w-2xl h-[500px] border rounded shadow mb-4"
-                    />
+                    <div className="w-full max-w-2xl h-[500px] border rounded shadow mb-4 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                      <Document file={selectedMaterial.dataUrl} loading={<span>Loading PDF...</span>} error={<span>Failed to load PDF.</span>}>
+                        <Page pageNumber={1} width={700} />
+                      </Document>
+                    </div>
                     <a
                       href={selectedMaterial.dataUrl}
                       download={selectedMaterial.name}

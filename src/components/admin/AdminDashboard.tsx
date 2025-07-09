@@ -31,6 +31,7 @@ import { useSearch } from '../../hooks/useSearch';
 import { SearchBar } from '../ui/SearchBar';
 import { useToast } from '../ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../lib/api';
 
 interface Student {
   id: string;
@@ -86,7 +87,7 @@ export const AdminDashboard: React.FC = () => {
   const { data: students = [], isLoading: isStudentsLoading } = useQuery<Student[]>({
     queryKey: ['students'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:4000/api/users');
+      const res = await fetch(`${API_BASE_URL}/users`);
       if (!res.ok) throw new Error('Failed to fetch students');
       return res.json();
     },
@@ -94,7 +95,7 @@ export const AdminDashboard: React.FC = () => {
   const { data: requests = [], isLoading: isRequestsLoading } = useQuery<{ studentId: string; courseId: string }[]>({
     queryKey: ['requests'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:4000/api/requests');
+      const res = await fetch(`${API_BASE_URL}/requests`);
       if (!res.ok) throw new Error('Failed to fetch requests');
       return res.json();
     },
@@ -102,7 +103,7 @@ export const AdminDashboard: React.FC = () => {
   const { data: courses = [], isLoading, isError } = useQuery<Course[]>({
     queryKey: ['courses'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:4000/api/courses');
+      const res = await fetch(`${API_BASE_URL}/courses`);
       if (!res.ok) throw new Error('Failed to fetch courses');
       return res.json();
     },
@@ -127,7 +128,7 @@ export const AdminDashboard: React.FC = () => {
   
   const deleteRequestMutation = useMutation({
     mutationFn: async ({ studentId, courseId }: { studentId: string; courseId: string }) => {
-      const res = await fetch('http://localhost:4000/api/requests', {
+      const res = await fetch(`${API_BASE_URL}/requests`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId, courseId }),
@@ -142,7 +143,7 @@ export const AdminDashboard: React.FC = () => {
 
   const createCourseMutation = useMutation({
     mutationFn: async (courseData: Omit<Course, 'id'>) => {
-      const res = await fetch('http://localhost:4000/api/courses', {
+      const res = await fetch(`${API_BASE_URL}/courses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(courseData),
@@ -157,7 +158,7 @@ export const AdminDashboard: React.FC = () => {
 
   const updateCourseMutation = useMutation({
     mutationFn: async ({ id, ...courseData }: Course) => {
-      const res = await fetch(`http://localhost:4000/api/courses/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/courses/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(courseData),
@@ -172,7 +173,7 @@ export const AdminDashboard: React.FC = () => {
 
   const deleteCourseMutation = useMutation({
     mutationFn: async (courseId: string) => {
-      const res = await fetch(`http://localhost:4000/api/courses/${courseId}`, {
+      const res = await fetch(`${API_BASE_URL}/courses/${courseId}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('Failed to delete course');
@@ -186,14 +187,14 @@ export const AdminDashboard: React.FC = () => {
   const approveRequestMutation = useMutation({
     mutationFn: async ({ studentId, courseId }: { studentId: string; courseId: string }) => {
       // First delete the request
-      await fetch('http://localhost:4000/api/requests', {
+      await fetch(`${API_BASE_URL}/requests`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId, courseId }),
       });
       
       // Then enroll the student in the course
-      const res = await fetch('http://localhost:4000/api/enrollments', {
+      const res = await fetch(`${API_BASE_URL}/enrollments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId, courseId }),
@@ -207,13 +208,26 @@ export const AdminDashboard: React.FC = () => {
     },
   });
 
+  const deleteStudentMutation = useMutation({
+    mutationFn: async (studentId: string) => {
+      const res = await fetch(`${API_BASE_URL}/users/${studentId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Failed to delete student');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    },
+  });
+
   // Fetch enrollments for all students
   const { data: allEnrollments = {}, refetch: refetchEnrollments } = useQuery<{ [studentId: string]: string[] }>({
     queryKey: ['allEnrollments', students.map(s => s.id).join(',')],
     queryFn: async () => {
       const result: { [studentId: string]: string[] } = {};
       for (const student of students) {
-        const res = await fetch(`http://localhost:4000/api/enrollments/${student.id}`);
+        const res = await fetch(`${API_BASE_URL}/enrollments/${student.id}`);
         if (res.ok) {
           result[student.id] = await res.json();
         } else {
@@ -253,16 +267,47 @@ export const AdminDashboard: React.FC = () => {
 
   const { toast } = useToast();
 
-  const handleSaveStudent = (formData: Omit<Student, 'id' | 'enrolledCourses' | 'joinDate'>) => {
-    // No-op for now, as students are backend-driven
-    setIsStudentModalOpen(false);
-    setSelectedStudent(null);
-    toast({ title: 'Student saved', description: 'Student details have been saved.' });
+  const handleSaveStudent = async (formData: Omit<Student, 'id' | 'enrolledCourses' | 'joinDate'>) => {
+    try {
+      if (selectedStudent) {
+        // Edit existing student
+        const res = await fetch(`${API_BASE_URL}/users/${selectedStudent.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        if (!res.ok) throw new Error('Failed to update student');
+        toast({ title: 'Student updated', description: 'Student details have been updated.' });
+      } else {
+        // Add new student
+        const res = await fetch(`${API_BASE_URL}/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        if (!res.ok) throw new Error('Failed to add student');
+        toast({ title: 'Student added', description: 'New student has been added.' });
+      }
+      setIsStudentModalOpen(false);
+      setSelectedStudent(null);
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    } catch (err) {
+      toast({ title: 'Error', description: (err as Error).message, variant: 'destructive' });
+    }
   };
 
   const handleDeleteStudent = () => {
-    setSelectedStudent(null);
-    toast({ title: 'Student deleted', description: 'Student has been deleted.' });
+    if (selectedStudent) {
+      deleteStudentMutation.mutate(selectedStudent.id, {
+        onSuccess: () => {
+          setSelectedStudent(null);
+          toast({ title: 'Student deleted', description: 'Student has been deleted.' });
+        },
+        onError: () => {
+          toast({ title: 'Error', description: 'Failed to delete student.', variant: 'destructive' });
+        }
+      });
+    }
   };
 
   const handleSaveCourse = (formData: Omit<Course, 'id'>) => {
@@ -612,12 +657,12 @@ export const AdminDashboard: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200/80 dark:divide-gray-700/80">
-                      {filteredRequests.map((req, idx) => {
+                      {filteredRequests.map((req) => {
                         const student = students.find(s => s.id === req.studentId);
                         const course = courses.find(c => c.id === req.courseId);
                         if (!student || !course) return null;
                         return (
-                          <tr key={idx}>
+                          <tr key={`${student.id}-${course.id}`}>
                             <td className="px-6 py-4 whitespace-nowrap">{student.name}</td>
                             <td className="px-6 py-4 whitespace-nowrap">{course.title}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">

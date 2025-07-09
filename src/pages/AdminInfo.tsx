@@ -13,20 +13,29 @@ const AdminInfo: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      setTimeout(() => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      if (data.role !== 'admin') {
+        setError('Access denied: Not an admin account.');
         setLoading(false);
-        navigate('/admin-dashboard');
-      }, 500);
-    } else {
-      setTimeout(() => {
-        setLoading(false);
-        setError('Invalid admin email or password. Please try again.');
-      }, 500);
+        return;
+      }
+      // Optionally store user in localStorage or context
+      setLoading(false);
+      navigate('/admin-dashboard');
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'Login failed');
     }
   };
 

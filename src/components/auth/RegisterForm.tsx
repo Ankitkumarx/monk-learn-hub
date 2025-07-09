@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { API_BASE_URL } from '../../lib/api';
 
 interface RegisterFormProps {
   onBackToLogin: () => void;
@@ -57,7 +58,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onBackToLogin }) => 
 
     // Register via backend API
     try {
-      const res = await fetch('http://localhost:4000/api/register', {
+      const res = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
